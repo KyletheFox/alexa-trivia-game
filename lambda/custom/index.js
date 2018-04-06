@@ -1,7 +1,7 @@
  /* eslint-disable  func-names */
 /* eslint-disable  dot-notation */
 /* eslint-disable  new-cap */
-/* eslint quote-props: ['error', 'consistent']*/
+/* eslint quote-props: ["error", "consistent"]*/
 /**
  * This sample demonstrates a simple skill built with the Amazon Alexa Skills
  * nodejs skill development kit.
@@ -32,9 +32,9 @@ const CACHE_KEY = 'QUESTIONS_KEY';
 const ANSWER_COUNT = 4; // The number of possible answers per trivia question.
 const GAME_LENGTH = NUMBER_OF_QUESTIONS;  // The number of questions per trivia game.
 const GAME_STATES = {
-    TRIVIA: '_TRIVIAMODE', // Asking trivia questions.
-    START: '_STARTMODE', // Entry point, start the game.
-    HELP: '_HELPMODE', // The user is asking for help.
+    TRIVIA: "_TRIVIAMODE", // Asking trivia questions.
+    START: "_STARTMODE", // Entry point, start the game.
+    HELP: "_HELPMODE", // The user is asking for help.
 };
 let langQuestions = {};
 
@@ -125,17 +125,17 @@ var languageString = {
 };
 
 const newSessionHandlers = {
-    'LaunchRequest': function () {
+    "LaunchRequest": function () {
         this.handler.state = GAME_STATES.START;
-        this.emitWithState('StartGame', true);
+        this.emitWithState("StartGame", true);
     },
-    'AMAZON.StartOverIntent': function () {
+    "AMAZON.StartOverIntent": function () {
         this.handler.state = GAME_STATES.START;
-        this.emitWithState('StartGame', true);
+        this.emitWithState("StartGame", true);
     },
-    'AMAZON.HelpIntent': function () {
+    "AMAZON.HelpIntent": function () {
         this.handler.state = GAME_STATES.HELP;
-        this.emitWithState('helpTheUser', true);
+        this.emitWithState("helpTheUser", true);
     },
     'LaunchIntent' : function() {
         this.handler.state = GAME_STATES.START;
@@ -155,7 +155,7 @@ function populateGameQuestions(translatedQuestions) {
     let index = translatedQuestions.length;
 
     if (GAME_LENGTH > index) {
-        throw new Error('Invalid Game Length.');
+        throw new Error("Invalid Game Length.");
     }
 
     for (let i = 0; i < translatedQuestions.length; i++) {
@@ -190,7 +190,7 @@ function populateRoundAnswers(gameQuestionIndexes, correctAnswerIndex, correctAn
     let index = answersCopy.length;
 
     if (index < ANSWER_COUNT) {
-        throw new Error('Not enough answers for question.');
+        throw new Error("Not enough answers for question.");
     }
 
     // Shuffle the answers, excluding the first element which is the correct answer.
@@ -223,56 +223,56 @@ function isAnswerSlotValid(intent) {
 
 function handleUserGuess(userGaveUp) {
     const answerSlotValid = isAnswerSlotValid(this.event.request.intent);
-    let speechOutput = '';
-    let speechOutputAnalysis = '';
+    let speechOutput = "";
+    let speechOutputAnalysis = "";
     const gameQuestions = this.attributes.questions;
     let correctAnswerIndex = parseInt(this.attributes.correctAnswerIndex, 10);
     let currentScore = parseInt(this.attributes.score, 10);
     let currentQuestionIndex = parseInt(this.attributes.currentQuestionIndex, 10);
     const correctAnswerText = this.attributes.correctAnswerText;
-    const translatedQuestions = this.t('QUESTIONS');
+    const translatedQuestions = this.t("QUESTIONS");
 
-    if (answerSlotValid && parseInt(this.event.request.intent.slots.Answer.value, 10) === this.attributes['correctAnswerIndex']) {
+    if (answerSlotValid && parseInt(this.event.request.intent.slots.Answer.value, 10) === this.attributes["correctAnswerIndex"]) {
         currentScore++;
-        speechOutputAnalysis = this.t('ANSWER_CORRECT_MESSAGE');
+        speechOutputAnalysis = this.t("ANSWER_CORRECT_MESSAGE");
     } else {
         if (!userGaveUp) {
-            speechOutputAnalysis = this.t('ANSWER_WRONG_MESSAGE');
+            speechOutputAnalysis = this.t("ANSWER_WRONG_MESSAGE");
         }
 
-        speechOutputAnalysis += this.t('CORRECT_ANSWER_MESSAGE', correctAnswerIndex, correctAnswerText);
+        speechOutputAnalysis += this.t("CORRECT_ANSWER_MESSAGE", correctAnswerIndex, correctAnswerText);
     }
 
     // Check if we can exit the game session after GAME_LENGTH questions (zero-indexed)
-    if (this.attributes['currentQuestionIndex'] === GAME_LENGTH - 1) {
-        speechOutput = userGaveUp ? '' : this.t('ANSWER_IS_MESSAGE');
-        speechOutput += speechOutputAnalysis + this.t('GAME_OVER_MESSAGE', currentScore.toString(), GAME_LENGTH.toString());
+    if (this.attributes["currentQuestionIndex"] === GAME_LENGTH - 1) {
+        speechOutput = userGaveUp ? "" : this.t("ANSWER_IS_MESSAGE");
+        speechOutput += speechOutputAnalysis + this.t("GAME_OVER_MESSAGE", currentScore.toString(), GAME_LENGTH.toString());
 
         this.response.speak(speechOutput);
-        this.emit(':responseReady');
+        this.emit(":responseReady");
     } else {
         currentQuestionIndex += 1;
         correctAnswerIndex = Math.floor(Math.random() * (ANSWER_COUNT));
         const spokenQuestion = Object.keys(translatedQuestions[gameQuestions[currentQuestionIndex]])[0];
         const roundAnswers = populateRoundAnswers.call(this, gameQuestions, currentQuestionIndex, correctAnswerIndex, translatedQuestions);
         const questionIndexForSpeech = currentQuestionIndex + 1;
-        let repromptText = this.t('TELL_QUESTION_MESSAGE', questionIndexForSpeech.toString(), spokenQuestion);
+        let repromptText = this.t("TELL_QUESTION_MESSAGE", questionIndexForSpeech.toString(), spokenQuestion);
 
         for (let i = 0; i < ANSWER_COUNT; i++) {
             repromptText += '<br/>' + '<font size="5">' + `${i + 1}. ${roundAnswers[i]}. ` + '</font>';
         }
 
-        speechOutput += userGaveUp ? '' : this.t('ANSWER_IS_MESSAGE');
-        speechOutput += speechOutputAnalysis + this.t('SCORE_IS_MESSAGE', currentScore.toString()) + repromptText;
+        speechOutput += userGaveUp ? "" : this.t("ANSWER_IS_MESSAGE");
+        speechOutput += speechOutputAnalysis + this.t("SCORE_IS_MESSAGE", currentScore.toString()) + repromptText;
 
         Object.assign(this.attributes, {
-            'speechOutput': repromptText,
-            'repromptText': repromptText,
-            'currentQuestionIndex': currentQuestionIndex,
-            'correctAnswerIndex': correctAnswerIndex + 1,
-            'questions': gameQuestions,
-            'score': currentScore,
-            'correctAnswerText': translatedQuestions[gameQuestions[currentQuestionIndex]][Object.keys(translatedQuestions[gameQuestions[currentQuestionIndex]])[0]][0],
+            "speechOutput": repromptText,
+            "repromptText": repromptText,
+            "currentQuestionIndex": currentQuestionIndex,
+            "correctAnswerIndex": correctAnswerIndex + 1,
+            "questions": gameQuestions,
+            "score": currentScore,
+            "correctAnswerText": translatedQuestions[gameQuestions[currentQuestionIndex]][Object.keys(translatedQuestions[gameQuestions[currentQuestionIndex]])[0]][0],
         });
 
         const builder = new Alexa.templateBuilders.BodyTemplate1Builder();
@@ -285,14 +285,15 @@ function handleUserGuess(userGaveUp) {
         this.response.cardRenderer(this.t('GAME_NAME'), repromptText);
         this.response.renderTemplate(template);
         this.emit(':responseReady');
+
     }
 }
 
 const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
-    'StartGame': function (newGame) {
-        let speechOutput = newGame ? this.t('NEW_GAME_MESSAGE', this.t('GAME_NAME')) + this.t('WELCOME_MESSAGE', GAME_LENGTH.toString()) : '';
+    "StartGame": function (newGame) {
+        let speechOutput = newGame ? this.t("NEW_GAME_MESSAGE", this.t("GAME_NAME")) + this.t("WELCOME_MESSAGE", GAME_LENGTH.toString()) : "";
         // Select GAME_LENGTH questions for the game
-        const translatedQuestions = this.t('QUESTIONS');
+        const translatedQuestions = this.t("QUESTIONS");
         const gameQuestions = populateGameQuestions(translatedQuestions);
 
         // Generate a random index for the correct answer, from 0 to 3
@@ -312,13 +313,13 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
         speechOutput += repromptText;
 
         Object.assign(this.attributes, {
-            'speechOutput': repromptText,
-            'repromptText': repromptText,
-            'currentQuestionIndex': currentQuestionIndex,
-            'correctAnswerIndex': correctAnswerIndex + 1,
-            'questions': gameQuestions,
-            'score': 0,
-            'correctAnswerText': translatedQuestions[gameQuestions[currentQuestionIndex]][Object.keys(translatedQuestions[gameQuestions[currentQuestionIndex]])[0]][0],
+            "speechOutput": repromptText,
+            "repromptText": repromptText,
+            "currentQuestionIndex": currentQuestionIndex,
+            "correctAnswerIndex": correctAnswerIndex + 1,
+            "questions": gameQuestions,
+            "score": 0,
+            "correctAnswerText": translatedQuestions[gameQuestions[currentQuestionIndex]][Object.keys(translatedQuestions[gameQuestions[currentQuestionIndex]])[0]][0],
         });
 
         // Set the current state to trivia mode. The skill will now use handlers defined in triviaStateHandlers
@@ -341,15 +342,15 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
 });
 
 const triviaStateHandlers = Alexa.CreateStateHandler(GAME_STATES.TRIVIA, {
-    'AnswerIntent': function () {
+    "AnswerIntent": function () {
         handleUserGuess.call(this, false);
     },
-    'DontKnowIntent': function () {
+    "DontKnowIntent": function () {
         handleUserGuess.call(this, true);
     },
-    'AMAZON.StartOverIntent': function () {
+    "AMAZON.StartOverIntent": function () {
         this.handler.state = GAME_STATES.START;
-        this.emitWithState('StartGame', false);
+        this.emitWithState("StartGame", false);
     },
     'AMAZON.RepeatIntent': function () {
         const builder = new Alexa.templateBuilders.BodyTemplate1Builder();
@@ -362,71 +363,67 @@ const triviaStateHandlers = Alexa.CreateStateHandler(GAME_STATES.TRIVIA, {
         this.response.renderTemplate(template);
         this.emit(':responseReady');
     },
-    'AMAZON.HelpIntent': function () {
+    "AMAZON.HelpIntent": function () {
         this.handler.state = GAME_STATES.HELP;
-        this.emitWithState('helpTheUser', false);
+        this.emitWithState("helpTheUser", false);
     },
-    'AMAZON.StopIntent': function () {
+    "AMAZON.StopIntent": function () {
         this.handler.state = GAME_STATES.HELP;
-        const speechOutput = this.t('STOP_MESSAGE');
+        const speechOutput = this.t("STOP_MESSAGE");
         this.response.speak(speechOutput).listen(speechOutput);
         this.response.cardRenderer(this.t('GAME_NAME'), speechOutput);
         this.emit(':responseReady');
     },
-    'AMAZON.CancelIntent': function () {
-        this.response.speak(this.t('CANCEL_MESSAGE'));
-        this.emit(':responseReady');
+    "AMAZON.CancelIntent": function () {
+        this.response.speak(this.t("CANCEL_MESSAGE"));
+        this.emit(":responseReady");
     },
-    'Unhandled': function () {
-        const speechOutput = this.t('TRIVIA_UNHANDLED', ANSWER_COUNT.toString());
+    "Unhandled": function () {
+        const speechOutput = this.t("TRIVIA_UNHANDLED", ANSWER_COUNT.toString());
         this.response.speak(speechOutput).listen(speechOutput);
-        this.response.cardRenderer(this.t('GAME_NAME'), speechOutput);
         this.emit(':responseReady');
-    },
-    'SessionEndedRequest': function () {
-        console.log(`Session ended in trivia state: ${this.event.request.reason}`);
     },
 });
 
 const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
-    'helpTheUser': function (newGame) {
-        const askMessage = newGame ? this.t('ASK_MESSAGE_START') : this.t('REPEAT_QUESTION_MESSAGE') + this.t('STOP_MESSAGE');
-        const speechOutput = this.t('HELP_MESSAGE', GAME_LENGTH) + askMessage;
-        const repromptText = this.t('HELP_REPROMPT') + askMessage;
+    "helpTheUser": function (newGame) {
+        const askMessage = newGame ? this.t("ASK_MESSAGE_START") : this.t("REPEAT_QUESTION_MESSAGE") + this.t("STOP_MESSAGE");
+        const speechOutput = this.t("HELP_MESSAGE", GAME_LENGTH) + askMessage;
+        const repromptText = this.t("HELP_REPROMPT") + askMessage;
 
         this.response.speak(speechOutput).listen(repromptText);
         this.response.cardRenderer(this.t('GAME_NAME'), repromptText);
         this.emit(':responseReady');
     },
-    'AMAZON.StartOverIntent': function () {
+    "AMAZON.StartOverIntent": function () {
         this.handler.state = GAME_STATES.START;
-        this.emitWithState('StartGame', false);
+        this.emitWithState("StartGame", false);
     },
-    'AMAZON.RepeatIntent': function () {
-        const newGame = !(this.attributes['speechOutput'] && this.attributes['repromptText']);
-        this.emitWithState('helpTheUser', newGame);
+    "AMAZON.RepeatIntent": function () {
+        const newGame = !(this.attributes["speechOutput"] && this.attributes["repromptText"]);
+        this.emitWithState("helpTheUser", newGame);
     },
-    'AMAZON.HelpIntent': function () {
-        const newGame = !(this.attributes['speechOutput'] && this.attributes['repromptText']);
-        this.emitWithState('helpTheUser', newGame);
+    "AMAZON.HelpIntent": function () {
+        const newGame = !(this.attributes["speechOutput"] && this.attributes["repromptText"]);
+        this.emitWithState("helpTheUser", newGame);
     },
-    'AMAZON.YesIntent': function () {
-        if (this.attributes['speechOutput'] && this.attributes['repromptText']) {
+    "AMAZON.YesIntent": function () {
+        if (this.attributes["speechOutput"] && this.attributes["repromptText"]) {
             this.handler.state = GAME_STATES.TRIVIA;
-            this.emitWithState('AMAZON.RepeatIntent');
+            this.emitWithState("AMAZON.RepeatIntent");
         } else {
             this.handler.state = GAME_STATES.START;
-            this.emitWithState('StartGame', false);
+            this.emitWithState("StartGame", false);
         }
     },
-    'AMAZON.NoIntent': function () {
-        const speechOutput = this.t('NO_MESSAGE');
+    "AMAZON.NoIntent": function () {
+        const speechOutput = this.t("NO_MESSAGE");
         this.response.speak(speechOutput);
         this.response.cardRenderer(this.t('GAME_NAME'), speechOutput);
         this.emit(':responseReady');
     },
-    'AMAZON.StopIntent': function () {
-        const speechOutput = this.t('STOP_MESSAGE');
+    "AMAZON.StopIntent": function () {
+        const speechOutput = this.t("STOP_MESSAGE");
         this.response.speak(speechOutput).listen(speechOutput);
         this.response.cardRenderer(this.t('GAME_NAME'), speechOutput);
         this.emit(':responseReady');
@@ -436,13 +433,13 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
         this.response.cardRenderer(this.t('GAME_NAME'), this.t('CANCEL_MESSAGE'));
         this.emit(':responseReady');
     },
-    'Unhandled': function () {
-        const speechOutput = this.t('HELP_UNHANDLED');
+    "Unhandled": function () {
+        const speechOutput = this.t("HELP_UNHANDLED");
         this.response.speak(speechOutput).listen(speechOutput);
         this.response.cardRenderer(this.t('GAME_NAME'), speechOutput);
         this.emit(':responseReady');
     },
-    'SessionEndedRequest': function () {
+    "SessionEndedRequest": function () {
         console.log(`Session ended in help state: ${this.event.request.reason}`);
     },
 });
