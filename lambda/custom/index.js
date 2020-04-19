@@ -14,7 +14,6 @@
 
 const Alexa = require('ask-sdk-v1adapter');
 const events = require('events');
-const redis = require("redis");
 const mysql = require('mysql');
 const EventEmitter = events.EventEmitter;
 
@@ -24,10 +23,8 @@ const DB_USER = process.env.DB_USER;
 const DB_PASS = process.env.DB_PASS;
 const DB_TABLE = process.env.DB_TABLE;
 const DB_DATABASE = process.env.DB_DATABASE;
-const REDIS_HOST = process.env.REDIS_HOST;
 const NUMBER_OF_QUESTIONS = process.env.NUMBER_OF_QUESTIONS;
 
-const CACHE_KEY = 'QUESTIONS_KEY';
 const ANSWER_COUNT = 4; // The number of possible answers per trivia question.
 const GAME_LENGTH = NUMBER_OF_QUESTIONS;  // The number of questions per trivia game.
 const GAME_STATES = {
@@ -37,13 +34,8 @@ const GAME_STATES = {
 };
 let langQuestions = {};
 
-const pool = mysql.createPool({
-    connectionLimit : 5, //important
-    host: DB_HOST,
-    user: DB_USER,
-    password: DB_PASS,
-    database: DB_DATABASE
-});
+console.log('rev4e3b34btb3b');
+
 
 const makeRichText = Alexa.utils.TextUtils.makeRichText;
 
@@ -409,76 +401,51 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
 });
 
 exports.handler = function (event, context, callback) {
+    console.log("GWETVTVRVTRWTVTRV");
     var flowController = new EventEmitter();
-    var client = redis.createClient(REDIS_HOST);
-
-    context.callbackWaitsForEmptyEventLoop = false; 
-
-    client.on("error", function (err) {
-        console.log("Error " + err);
-    });
-
-    flowController.on('getCacheResults', () => {
-        client.get("CACHE_KEY", (err, reply) => {
-            if (reply !== null) {
-                console.log('Found in cache. SUPER SPEED!!!');
-                flowController.emit('startAlexa', JSON.parse(reply));
-            } else {
-                console.log('cache empty, going to database');
-                flowController.emit('callDatabase');
-            }
-            
-        })
-
-    });
+    context.callbackWaitsForEmptyEventLoop = false;
+    const connection = mysql.createConnection({
+        host: DB_HOST,
+        user: DB_USER,
+        port: '3306',
+        password: DB_PASS,
+        database: DB_DATABASE,
+    }); 
       
     flowController.on('callDatabase', () => {
-        pool.getConnection((err,connection) => {
-            if (err) {
-                throw err;
-                connection.release();
-                res.json({"code" : 100, "status" : "Error in connection database"});
-                return;
-            }   
+        console.log("w w/fjnr;r rgn jrn");
+        connection.query("SELECT * FROM " + DB_TABLE + " where active_ind = 'Y';", (err,rows) => {
 
-            connection.query("SELECT * FROM " + DB_TABLE + " where active_ind = 'Y'", (err,rows) => {
+            connection.end();
+            if(err) throw err;
+            
+            langQuestions = {};
 
-                if(err) throw err;
-                connection.release();
+            rows.forEach(element => {
+                var questionNode = {}
+                questionNode[element.question_txt] = new Array();
+                questionNode[element.question_txt].push(element.ans_1);
+                questionNode[element.question_txt].push(element.ans_2);
+                questionNode[element.question_txt].push(element.ans_3);
+                questionNode[element.question_txt].push(element.ans_4);
 
-                langQuestions = {};
+                if (typeof langQuestions['QUESTIONS_' + element.language] === 'undefined') {
+                    langQuestions['QUESTIONS_' + element.language] = new Array();
+                }
 
-                rows.forEach(element => {
-                    var questionNode = {}
-                    questionNode[element.question_txt] = new Array();
-                    questionNode[element.question_txt].push(element.ans_1);
-                    questionNode[element.question_txt].push(element.ans_2);
-                    questionNode[element.question_txt].push(element.ans_3);
-                    questionNode[element.question_txt].push(element.ans_4);
-
-                    if (typeof langQuestions['QUESTIONS_' + element.language] === 'undefined') {
-                        langQuestions['QUESTIONS_' + element.language] = new Array();
-                    }
-
-                    langQuestions['QUESTIONS_' + element.language].push(questionNode);
-                });
-
-                
-
-                languageString.en.translation['QUESTIONS'] = langQuestions['QUESTIONS_EN_US'];
-                languageString['en-US'].translation.QUESTIONS = langQuestions['QUESTIONS_EN_US'];
-                // languageString['en-GB'].translation.QUESTIONS = langQuestions['QUESTIONS_EN_GB'];
-
-                client.set("CACHE_KEY", JSON.stringify(languageString));
-                flowController.emit('startAlexa', languageString);
-                
+                langQuestions['QUESTIONS_' + element.language].push(questionNode);
             });
+
+            languageString.en.translation['QUESTIONS'] = langQuestions['QUESTIONS_EN_US'];
+            languageString['en-US'].translation.QUESTIONS = langQuestions['QUESTIONS_EN_US'];
+
+            flowController.emit('startAlexa', languageString);
+            
         });
     });
 
     flowController.on('startAlexa', (langString) => {
         console.log('Starting Application');
-        client.quit();
         const alexa = Alexa.handler(event, context);
         alexa.appId = APP_ID;
         // To enable string internationalization (i18n) features, set a resources object.
@@ -488,5 +455,5 @@ exports.handler = function (event, context, callback) {
         alexa.execute();
     });
 
-    flowController.emit('getCacheResults');
+    flowController.emit('callDatabase');
 };

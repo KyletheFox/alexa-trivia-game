@@ -408,10 +408,6 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
 exports.handler = function (event, context, callback) {
     var flowController = new EventEmitter();
     context.callbackWaitsForEmptyEventLoop = false; 
-
-    client.on("error", function (err) {
-        console.log("Error " + err);
-    });
       
     flowController.on('callDatabase', () => {
         pool.getConnection((err,connection) => {
@@ -455,7 +451,6 @@ exports.handler = function (event, context, callback) {
 
     flowController.on('startAlexa', (langString) => {
         console.log('Starting Application');
-        client.quit();
         const alexa = Alexa.handler(event, context);
         alexa.appId = APP_ID;
         // To enable string internationalization (i18n) features, set a resources object.
