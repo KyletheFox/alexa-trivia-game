@@ -14,7 +14,6 @@
 
 const Alexa = require('ask-sdk-v1adapter');
 const events = require('events');
-const redis = require("redis");
 const mysql = require('mysql');
 const EventEmitter = events.EventEmitter;
 
@@ -24,10 +23,8 @@ const DB_USER = process.env.DB_USER;
 const DB_PASS = process.env.DB_PASS;
 const DB_TABLE = process.env.DB_TABLE;
 const DB_DATABASE = process.env.DB_DATABASE;
-const REDIS_HOST = process.env.REDIS_HOST;
 const NUMBER_OF_QUESTIONS = process.env.NUMBER_OF_QUESTIONS;
 
-const CACHE_KEY = 'QUESTIONS_KEY';
 const ANSWER_COUNT = 4; // The number of possible answers per trivia question.
 const GAME_LENGTH = NUMBER_OF_QUESTIONS;  // The number of questions per trivia game.
 const GAME_STATES = {
@@ -410,26 +407,10 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
 
 exports.handler = function (event, context, callback) {
     var flowController = new EventEmitter();
-    var client = redis.createClient(REDIS_HOST);
-
     context.callbackWaitsForEmptyEventLoop = false; 
 
     client.on("error", function (err) {
         console.log("Error " + err);
-    });
-
-    flowController.on('getCacheResults', () => {
-        client.get("CACHE_KEY", (err, reply) => {
-            if (reply !== null) {
-                console.log('Found in cache. SUPER SPEED!!!');
-                flowController.emit('startAlexa', JSON.parse(reply));
-            } else {
-                console.log('cache empty, going to database');
-                flowController.emit('callDatabase');
-            }
-            
-        })
-
     });
       
     flowController.on('callDatabase', () => {
@@ -463,13 +444,9 @@ exports.handler = function (event, context, callback) {
                     langQuestions['QUESTIONS_' + element.language].push(questionNode);
                 });
 
-                
-
                 languageString.en.translation['QUESTIONS'] = langQuestions['QUESTIONS_EN_US'];
                 languageString['en-US'].translation.QUESTIONS = langQuestions['QUESTIONS_EN_US'];
-                // languageString['en-GB'].translation.QUESTIONS = langQuestions['QUESTIONS_EN_GB'];
 
-                client.set("CACHE_KEY", JSON.stringify(languageString));
                 flowController.emit('startAlexa', languageString);
                 
             });
@@ -488,5 +465,5 @@ exports.handler = function (event, context, callback) {
         alexa.execute();
     });
 
-    flowController.emit('getCacheResults');
+    flowController.emit('callDatabase');
 };
