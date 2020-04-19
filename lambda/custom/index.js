@@ -12,11 +12,10 @@
 
 'use strict';
 
-const Alexa = require('alexa-sdk');
+const Alexa = require('ask-sdk-v1adapter');
 const events = require('events');
 const redis = require("redis");
 const mysql = require('mysql');
-const questions = require('./question');
 const EventEmitter = events.EventEmitter;
 
 const APP_ID = "amzn1.ask.skill.05a79caf-aff3-40e1-83df-223bfaa410d3"; // TODO replace with your app ID (OPTIONAL)
@@ -46,7 +45,6 @@ const pool = mysql.createPool({
     database: DB_DATABASE
 });
 
-const makeTextContent = Alexa.utils.TextUtils.makeTextContent;
 const makeRichText = Alexa.utils.TextUtils.makeRichText;
 
 /**
@@ -84,44 +82,9 @@ var languageString = {
     },
     'en-US': {
         'translation': {
-            // 'QUESTIONS': questions['QUESTIONS_EN_US'],
             'GAME_NAME': 'NCIS Trivia', // Be sure to change this for your skill.
         },
     },
-    // 'en-GB': {
-    //     'translation': {
-    //         // 'QUESTIONS': questions['QUESTIONS_EN_GB'],
-    //         // 'QUESTIONS': langQuestions['QUESTIONS_EN_GB'],
-    //         'GAME_NAME': 'British Reindeer Trivia', // Be sure to change this for your skill.
-    //     },
-    // },
-    // 'de': {
-    //     'translation': {
-    //         'QUESTIONS': questions['QUESTIONS_DE_DE'],
-    //         'GAME_NAME': 'Wissenswertes über Rentiere in Deutsch', // Be sure to change this for your skill.
-    //         'HELP_MESSAGE': 'Ich stelle dir %s Multiple-Choice-Fragen. Antworte mit der Zahl, die zur richtigen Antwort gehört. ' +
-    //             'Sage beispielsweise eins, zwei, drei oder vier. Du kannst jederzeit ein neues Spiel beginnen, sage einfach „Spiel starten“. ',
-    //         'REPEAT_QUESTION_MESSAGE': 'Wenn die letzte Frage wiederholt werden soll, sage „Wiederholen“ ',
-    //         'ASK_MESSAGE_START': 'Möchten Sie beginnen?',
-    //         'HELP_REPROMPT': 'Wenn du eine Frage beantworten willst, antworte mit der Zahl, die zur richtigen Antwort gehört. ',
-    //         'STOP_MESSAGE': 'Möchtest du weiterspielen?',
-    //         'CANCEL_MESSAGE': 'OK, dann lass uns bald mal wieder spielen.',
-    //         'NO_MESSAGE': 'OK, spielen wir ein andermal. Auf Wiedersehen!',
-    //         'TRIVIA_UNHANDLED': 'Sagt eine Zahl beispielsweise zwischen 1 und %s',
-    //         'HELP_UNHANDLED': 'Sage ja, um fortzufahren, oder nein, um das Spiel zu beenden.',
-    //         'START_UNHANDLED': 'Du kannst jederzeit ein neues Spiel beginnen, sage einfach „Spiel starten“.',
-    //         'NEW_GAME_MESSAGE': 'Willkommen bei %s. ',
-    //         'WELCOME_MESSAGE': 'Ich stelle dir %s Fragen und du versuchst, so viele wie möglich richtig zu beantworten. ' +
-    //         'Sage einfach die Zahl, die zur richtigen Antwort passt. Fangen wir an. ',
-    //         'ANSWER_CORRECT_MESSAGE': 'Richtig. ',
-    //         'ANSWER_WRONG_MESSAGE': 'Falsch. ',
-    //         'CORRECT_ANSWER_MESSAGE': 'Die richtige Antwort ist %s: %s. ',
-    //         'ANSWER_IS_MESSAGE': 'Diese Antwort ist ',
-    //         'TELL_QUESTION_MESSAGE': 'Frage %s. %s ',
-    //         'GAME_OVER_MESSAGE': 'Du hast %s von %s richtig beantwortet. Danke fürs Mitspielen!',
-    //         'SCORE_IS_MESSAGE': 'Dein Ergebnis ist %s. ',
-    //     },
-    // },
 };
 
 const newSessionHandlers = {
@@ -525,5 +488,4 @@ exports.handler = function (event, context, callback) {
     });
 
     flowController.emit('getCacheResults');
-    // flowController.emit('startAlexa', languageString);
 };
