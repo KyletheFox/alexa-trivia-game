@@ -33,11 +33,15 @@ const GAME_STATES = {
     HELP: "_HELPMODE", // The user is asking for help.
 };
 let langQuestions = {};
-
-console.log('rev4e3b34btb3b');
-
-
 const makeRichText = Alexa.utils.TextUtils.makeRichText;
+
+const pool = mysql.createPool({
+    connectionLimit : 5, //important
+    host: DB_HOST,
+    user: DB_USER,
+    password: DB_PASS,
+    database: DB_DATABASE
+});
 
 /**
  * When editing your questions pay attention to your punctuation. Make sure you use question marks or periods.
@@ -100,7 +104,7 @@ const newSessionHandlers = {
     'Unhandled': function () {
         const speechOutput = this.t('START_UNHANDLED');
         this.response.speak(speechOutput).listen(speechOutput);
-        this.response.cardRenderer(this.t('GAME_NAME'), speechOutput);
+        // this.response.cardRenderer(this.t('GAME_NAME'), speechOutput);
         this.emit(':responseReady');
     },
 };
@@ -140,9 +144,7 @@ function populateGameQuestions(translatedQuestions) {
 function populateRoundAnswers(gameQuestionIndexes, correctAnswerIndex, correctAnswerTargetLocation, translatedQuestions) {
     const answers = [];
     const answersCopy = translatedQuestions[gameQuestionIndexes[correctAnswerIndex]][Object.keys(translatedQuestions[gameQuestionIndexes[correctAnswerIndex]])[0]].slice();
-    
-    console.log('answersCopy: ' + answersCopy);
-    
+        
     let index = answersCopy.length;
 
     if (index < ANSWER_COUNT) {
@@ -231,22 +233,21 @@ function handleUserGuess(userGaveUp) {
             "correctAnswerText": translatedQuestions[gameQuestions[currentQuestionIndex]][Object.keys(translatedQuestions[gameQuestions[currentQuestionIndex]])[0]][0],
         });
 
-        const builder = new Alexa.templateBuilders.BodyTemplate1Builder();
-        let template = builder.setTitle(this.t('GAME_NAME'))
-                          .setTextContent(makeRichText(repromptText))
-                          .build();
+        // const builder = new Alexa.templateBuilders.BodyTemplate1Builder();
+        // let template = builder.setTitle(this.t('GAME_NAME'))
+        //                   .setTextContent(makeRichText(repromptText))
+        //                   .build();
         
-
         this.response.speak(speechOutput).listen(repromptText);
-        this.response.cardRenderer(this.t('GAME_NAME'), repromptText);
-        this.response.renderTemplate(template);
+        // this.response.cardRenderer(this.t('GAME_NAME'), repromptText);
+        // this.response.renderTemplate(template);
         this.emit(':responseReady');
-
     }
 }
 
 const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
     "StartGame": function (newGame) {
+        console.log('starting game');
         let speechOutput = newGame ? this.t("NEW_GAME_MESSAGE", this.t("GAME_NAME")) + this.t("WELCOME_MESSAGE", GAME_LENGTH.toString()) : "";
         // Select GAME_LENGTH questions for the game
         const translatedQuestions = this.t("QUESTIONS");
@@ -281,18 +282,15 @@ const startStateHandlers = Alexa.CreateStateHandler(GAME_STATES.START, {
         // Set the current state to trivia mode. The skill will now use handlers defined in triviaStateHandlers
         this.handler.state = GAME_STATES.TRIVIA;
 
-        const builder = new Alexa.templateBuilders.BodyTemplate1Builder();
-        let template = builder.setTitle(this.t('GAME_NAME'))
-                          .setTextContent(makeRichText(displayText))
-                          .build();
+        // const builder = new Alexa.templateBuilders.BodyTemplate1Builder();
+        // let template = builder.setTitle(this.t('GAME_NAME'))
+        //                   .setTextContent(makeRichText(displayText))
+        //                   .build();
 
-        console.log(speechOutput);
-        console.log(speechOutput.replace(new RegExp('/(<.*?>)/', 'g')));
         this.response.speak(speechOutput).listen(repromptText);
         // this.response.cardRenderer(this.t('GAME_NAME'), displayText);
-        this.response.renderTemplate(template);
-
-        console.log('Just about to emit start response');
+        // this.response.renderTemplate(template);
+        console.log('END - starting game');
         this.emit(':responseReady');
     },
 });
@@ -309,14 +307,14 @@ const triviaStateHandlers = Alexa.CreateStateHandler(GAME_STATES.TRIVIA, {
         this.emitWithState("StartGame", false);
     },
     'AMAZON.RepeatIntent': function () {
-        const builder = new Alexa.templateBuilders.BodyTemplate1Builder();
-        let template = builder.setTitle(this.t('GAME_NAME'))
-                          .setTextContent(makeRichText(this.attributes['speechOutput']))
-                          .build();
+        // const builder = new Alexa.templateBuilders.BodyTemplate1Builder();
+        // let template = builder.setTitle(this.t('GAME_NAME'))
+        //                   .setTextContent(makeRichText(this.attributes['speechOutput']))
+        //                   .build();
 
         this.response.speak(this.attributes['speechOutput']).listen(this.attributes['repromptText']);
-        this.response.cardRenderer(this.t('GAME_NAME'), this.attributes['speechOutput']);
-        this.response.renderTemplate(template);
+        // this.response.cardRenderer(this.t('GAME_NAME'), this.attributes['speechOutput']);
+        // this.response.renderTemplate(template);
         this.emit(':responseReady');
     },
     "AMAZON.HelpIntent": function () {
@@ -327,7 +325,7 @@ const triviaStateHandlers = Alexa.CreateStateHandler(GAME_STATES.TRIVIA, {
         this.handler.state = GAME_STATES.HELP;
         const speechOutput = this.t("STOP_MESSAGE");
         this.response.speak(speechOutput).listen(speechOutput);
-        this.response.cardRenderer(this.t('GAME_NAME'), speechOutput);
+        // this.response.cardRenderer(this.t('GAME_NAME'), speechOutput);
         this.emit(':responseReady');
     },
     "AMAZON.CancelIntent": function () {
@@ -348,7 +346,7 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
         const repromptText = this.t("HELP_REPROMPT") + askMessage;
 
         this.response.speak(speechOutput).listen(repromptText);
-        this.response.cardRenderer(this.t('GAME_NAME'), repromptText);
+        // this.response.cardRenderer(this.t('GAME_NAME'), repromptText);
         this.emit(':responseReady');
     },
     "AMAZON.StartOverIntent": function () {
@@ -401,46 +399,45 @@ const helpStateHandlers = Alexa.CreateStateHandler(GAME_STATES.HELP, {
 });
 
 exports.handler = function (event, context, callback) {
-    console.log("GWETVTVRVTRWTVTRV");
     var flowController = new EventEmitter();
     context.callbackWaitsForEmptyEventLoop = false;
-    const connection = mysql.createConnection({
-        host: DB_HOST,
-        user: DB_USER,
-        port: '3306',
-        password: DB_PASS,
-        database: DB_DATABASE,
-    }); 
       
     flowController.on('callDatabase', () => {
-        console.log("w w/fjnr;r rgn jrn");
-        connection.query("SELECT * FROM " + DB_TABLE + " where active_ind = 'Y';", (err,rows) => {
+        pool.getConnection((err,connection) => {
+            if (err) {
+                throw err;
+                connection.release();
+                res.json({"code" : 100, "status" : "Error in connection database"});
+                return;
+            }   
+            connection.query("SELECT * FROM " + DB_TABLE + " where active_ind = 'Y';", (err,rows) => {
 
-            connection.end();
-            if(err) throw err;
-            
-            langQuestions = {};
+                if(err) throw err;
+                connection.release();
+                
+                langQuestions = {};
 
-            rows.forEach(element => {
-                var questionNode = {}
-                questionNode[element.question_txt] = new Array();
-                questionNode[element.question_txt].push(element.ans_1);
-                questionNode[element.question_txt].push(element.ans_2);
-                questionNode[element.question_txt].push(element.ans_3);
-                questionNode[element.question_txt].push(element.ans_4);
+                rows.forEach(element => {
+                    var questionNode = {}
+                    questionNode[element.question_txt] = new Array();
+                    questionNode[element.question_txt].push(element.ans_1);
+                    questionNode[element.question_txt].push(element.ans_2);
+                    questionNode[element.question_txt].push(element.ans_3);
+                    questionNode[element.question_txt].push(element.ans_4);
 
-                if (typeof langQuestions['QUESTIONS_' + element.language] === 'undefined') {
-                    langQuestions['QUESTIONS_' + element.language] = new Array();
-                }
+                    if (typeof langQuestions['QUESTIONS_' + element.language] === 'undefined') {
+                        langQuestions['QUESTIONS_' + element.language] = new Array();
+                    }
 
-                langQuestions['QUESTIONS_' + element.language].push(questionNode);
+                    langQuestions['QUESTIONS_' + element.language].push(questionNode);
+                });
+
+                languageString.en.translation['QUESTIONS'] = langQuestions['QUESTIONS_EN_US'];
+                languageString['en-US'].translation.QUESTIONS = langQuestions['QUESTIONS_EN_US'];
+
+                flowController.emit('startAlexa', languageString);
+                
             });
-
-            languageString.en.translation['QUESTIONS'] = langQuestions['QUESTIONS_EN_US'];
-            languageString['en-US'].translation.QUESTIONS = langQuestions['QUESTIONS_EN_US'];
-
-            flowController.emit('startAlexa', languageString);
-            
         });
     });
 
